@@ -124,4 +124,30 @@
                     ("Content-Type" . "application/json")))
          (uri (make-api-uri client "/.well-known/openid-configuration"))
          (resp (dexador:get uri :headers headers)))
-    (jonathan:parse resp :as :hash-table)))
+    (jonathan:parse resp :as :plist)))
+
+(defmethod parse-key ((kind (eql :rsa)) data)
+  "Parses RSA public key using the provided plist data.
+See RFC 7517 about the JWK format and RFC 7518, Section 6.3 about the
+RSA key parameters."
+  (let ((use (getf data :|use|))
+        (alg (getf data :|alg|))
+        (kid (getf data :|kid|))
+        (kty (getf data :|kty|))
+        (e (getf data :|e|))
+        (n (getf data :|n|)))
+    (unless (string= kty "RSA")
+      (error 'invalid-key :message "Invalid RSA public key" :data data))
+    (unless n
+      (error 'invalid-key :message "Missing modulus parameter" :data data))
+    (unless e
+      (error 'invalid-key :message "Missing exponent parameter" :data data))
+    ;; The RSA public key parameters are Base64urlUInt-encoded values
+    (let* ((e-decoded (ironclad:octets-to-integer
+                       (binascii:decode-base64url
+                        (babel:string-to-octets e))))
+           (n-decoded (ironclad:octets-to-integer
+                       (binascii:decode-base64url
+                        (babel:string-to-octets n))))
+           (key (ironclad:make-public-key :rsa :n n-decoded :e e-decoded)))
+      (list :use use :alg alg :kid kid :kty kty :key key))))
