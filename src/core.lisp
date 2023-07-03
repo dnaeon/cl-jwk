@@ -191,6 +191,7 @@ dispatches further decoding to the respective implementation"
          (key (alexandria:switch (kty :test #'string=)
                 ("RSA" (decode :rsa-public-key data))
                 ("EC" (decode :ec-public-key data))
+                ("oct" (decode :oct-public-key data))
                 (t (error 'invalid-key :message "Unsupported public key type" :data data)))))
     (make-instance 'jwk
                    :kty kty
@@ -312,3 +313,21 @@ public keys format."
                    (= (length y-octets) 32))
         (error 'invalid-key :message "Coordinates should be 32 bytes for Secp256k1 key" :data data))
       (ironclad:make-public-key :secp256k1 :y (ironclad::ec-encode-point point)))))
+
+(defun %get-hmac (key alg data)
+  (alexandria:switch (alg :test #'string=)
+    ("HS256" (ironclad:make-mac :hmac key :sha256))
+    ("HS384" (ironclad:make-mac :hmac key :sha384))
+    ("HS512" (ironclad:make-mac :hmac key :sha512))
+    (t (error 'invalid-key :message "Unsupported symmetric key algorithm" :data data))))
+
+(defmethod decode ((kind (eql :oct-public-key)) data)
+  "Decodes a JWK `octet-sequence' symmetric key from the given plist data.
+See RFC 7518, Section 6.4 for more details about Symmetric Keys format."
+  (let ((k (getf data :|k|))
+        (alg (getf data :|alg|)))
+    (unless k
+      (error 'invalid-key :message "Missing octet sequence" :data data))
+    (unless alg
+      (error 'invalid-key :message "Missing algorithm identifier" :data data))
+    (%get-hmac (binascii:decode-base64url k) alg data)))
