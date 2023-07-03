@@ -1,0 +1,59 @@
+* cl-jwk
+
+Common Lisp system for parsing JSON Web Keys (JWK)
+
+** TODO Fill me in
+
+* Requirements
+
+- [[https://www.quicklisp.org/beta/][Quicklisp]]
+
+* Installation
+
+Clone the repo in your [[https://www.quicklisp.org/beta/faq.html][Quicklisp local-projects]] directory.
+
+#+begin_src lisp
+(ql:register-local-projects)
+#+end_src
+
+Then load the system.
+
+#+begin_src lisp
+(ql:quickload :cl-jwk)
+#+end_src
+
+* Usage
+
+** TODO Fill me in
+
+* Tests
+
+The =cl-jwk= tests are provided as part of the
+=:cl-jwk.test= system.
+
+In order to run the tests you can evaluate the following expressions.
+
+#+begin_src lisp
+CL-USER> (ql:quickload :cl-jwk.test)
+CL-USER> (asdf:test-system :cl-jwk.test)
+#+end_src
+
+Or you can run the tests using the =scripts/run-tests.sh= shell script
+instead, e.g.
+
+#+begin_src shell
+env LISP=sbcl ./scripts/run-tests.sh
+#+end_src
+
+* Contributing
+
+=cl-jwk= is hosted on [[https://github.com/dnaeon/cl-jwk][Github]]. Please contribute by reporting
+issues, suggesting features or by sending patches using pull requests.
+
+* Authors
+
+- Marin Atanasov Nikolov <[[mailto:dnaeon@gmail.com][dnaeon@gmail.com]]>
+
+* License
+
+This project is Open Source and licensed under the [[http://opensource.org/licenses/BSD-2-Clause][BSD License]].
