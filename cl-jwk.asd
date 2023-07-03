@@ -42,7 +42,8 @@
   :source-control "https://github.com/dnaeon/cl-jwk"
   :depends-on (:cl-reexport
                :dexador
-               :jonathan)
+               :jonathan
+               :ironclad)
   :components ((:module "core"
                 :pathname #P"src/"
                 :components ((:file "core")))
