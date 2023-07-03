@@ -48,7 +48,10 @@
    ;; conditions
    :invalid-key
    :invalid-key-message
-   :invalid-key-data))
+   :invalid-key-data
+
+   ;; misc
+   :keywordize))
 (in-package :cl-jwk.core)
 
 (defparameter *user-agent*
@@ -81,6 +84,10 @@
   (:documentation "Condition which is signalled when an invalid key is detected")
   (:report (lambda (condition stream)
              (format stream "~A" (invalid-key-message condition)))))
+
+(defun keywordize (name)
+  "Returns a keyword from the given NAME"
+  (intern (string name) :keyword))
 
 (defclass client ()
   ((scheme
@@ -150,4 +157,41 @@ RSA key parameters."
                        (binascii:decode-base64url
                         (babel:string-to-octets n))))
            (key (ironclad:make-public-key :rsa :n n-decoded :e e-decoded)))
-      (list :use use :alg alg :kid kid :kty kty :key key))))
+      (list :use use
+            :alg (and alg (keywordize alg))
+            :kid kid
+            :kty kty
+            :key key))))
+
+(defmethod parse-key ((kind (eql :secp256r1)) data)
+  "Decodes Secp256r1 (NIST P-256) public key from the given plist data.
+See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
+public keys format."
+  (let ((use (getf data :|use|))
+        (alg (getf data :|alg|))
+        (crv (getf data :|crv|))
+        (kid (getf data :|kid|))
+        (kty (getf data :|kty|))
+        (x (getf data :|x|))
+        (y (getf data :|y|)))
+    (unless (string= kty "EC")
+      (error 'invalid-key :message "Invalid Elliptic Curve public key" :data data))
+    (unless x
+      (error 'invalid-key :message "Missing X coordinate parameter" :data data))
+    (unless y
+      (error 'invalid-key :message "Missing Y coordinate parameter" :data data))
+    ;; The X and Y coordinates are Base64urlUInt-encoded values
+    (let* ((x-octets (binascii:decode-base64url x))
+           (y-octets (binascii:decode-base64url y))
+           (x-uint (ironclad::ec-decode-scalar :secp256r1 x-octets))
+           (y-uint (ironclad::ec-decode-scalar :secp256r1 y-octets))
+           (point (make-instance 'ironclad::secp256r1-point :x x-uint :y y-uint :z 1)))
+      (unless (and (= (length x-octets) 32)
+                   (= (length y-octets) 32))
+        (error 'invalid-key "Invalid Secp256r1 key" :data data))
+      (list :use use
+            :crv crv
+            :alg (and alg (keywordize alg))
+            :kid kid
+            :kty kty
+            :key (ironclad:make-public-key :secp256r1 :y (ironclad::ec-encode-point point))))))
