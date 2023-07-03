@@ -43,7 +43,12 @@
    :make-api-uri
    :openid-provider-metadata
    :public-keys
-   :parse-key))
+   :parse-key
+
+   ;; conditions
+   :invalid-key
+   :invalid-key-message
+   :invalid-key-data))
 (in-package :cl-jwk.core)
 
 (defparameter *user-agent*
@@ -61,6 +66,21 @@
 
 (defgeneric parse-key (kind data)
   (:documentation "Parses a JWK key of the given kind using the provided data"))
+
+(define-condition invalid-key (simple-error)
+  ((message
+    :initarg :message
+    :initform (error "Must specify error message")
+    :reader invalid-key-message
+    :documentation "Human-friendly error message")
+   (data
+    :initarg :data
+    :initform (error "Must specify key data")
+    :reader invalid-key-data
+    :documentation "The data of the invalid key"))
+  (:documentation "Condition which is signalled when an invalid key is detected")
+  (:report (lambda (condition stream)
+             (format stream "~A" (invalid-key-message condition)))))
 
 (defclass client ()
   ((scheme
