@@ -207,6 +207,7 @@ dispatches further decoding to the respective implementation"
       ("P-256" (decode :secp256r1-public-key data))
       ("P-384" (decode :secp384r1-public-key data))
       ("P-521" (decode :secp521r1-public-key data))
+      ("secp256k1" (decode :secp256k1-public-key data))
       (t (error 'invalid-key :message "Unsupported Elliptic Curve public key" :data data)))))
 
 (defmethod decode ((kind (eql :rsa-public-key)) data)
@@ -290,3 +291,24 @@ public keys format."
                    (= (length y-octets) 66))
         (error 'invalid-key :message "Coordinates should be 66 bytes for Secp521r1 key" :data data))
       (ironclad:make-public-key :secp521r1 :y (ironclad::ec-encode-point point)))))
+
+(defmethod decode ((kind (eql :secp256k1-public-key)) data)
+  "Decodes Secp256k1 public key from the given plist data.
+See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
+public keys format."
+  (let ((x (getf data :|x|))
+        (y (getf data :|y|)))
+    (unless x
+      (error 'invalid-key :message "Missing X coordinate parameter" :data data))
+    (unless y
+      (error 'invalid-key :message "Missing Y coordinate parameter" :data data))
+    ;; The X and Y coordinates are Base64urlUInt-encoded values
+    (let* ((x-octets (binascii:decode-base64url x))
+           (y-octets (binascii:decode-base64url y))
+           (x-uint (ironclad::ec-decode-scalar :secp256k1 x-octets))
+           (y-uint (ironclad::ec-decode-scalar :secp256k1 y-octets))
+           (point (make-instance 'ironclad::secp256k1-point :x x-uint :y y-uint :z 1)))
+      (unless (and (= (length x-octets) 32)
+                   (= (length y-octets) 32))
+        (error 'invalid-key :message "Coordinates should be 32 bytes for Secp256k1 key" :data data))
+      (ironclad:make-public-key :secp256k1 :y (ironclad::ec-encode-point point)))))
