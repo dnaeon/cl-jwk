@@ -26,5 +26,82 @@
 (in-package :cl-user)
 (defpackage :cl-jwk.core
   (:use :cl)
-  (:nicknames :cl-jwk.core))
+  (:nicknames :cl-jwk.core)
+  (:export
+   ;; vars
+   :*user-agent*
+
+   ;; client and accessors
+   :client
+   :client-scheme
+   :client-port
+   :client-hostname
+   :client-api-prefix
+   :make-client
+
+   ;; generics
+   :make-api-uri
+   :openid-provider-metadata
+   :public-keys
+   :parse-key))
 (in-package :cl-jwk.core)
+
+(defparameter *user-agent*
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.4 Safari/605.1.15"
+  "User-Agent header to use")
+
+(defgeneric openid-provider-metadata (client)
+  (:documentation "Returns the OpenID Provider Metadata"))
+
+(defgeneric make-api-uri (client path &key query-params)
+  (:documentation "Returns an URI to the given API path"))
+
+(defgeneric public-keys (client)
+  (:documentation "Returns the public keys used to verify the authenticity of tokens"))
+
+(defgeneric parse-key (kind data)
+  (:documentation "Parses a JWK key of the given kind using the provided data"))
+
+(defclass client ()
+  ((scheme
+    :initarg :scheme
+    :initform "https"
+    :accessor client-scheme
+    :documentation "Scheme to use")
+   (port
+    :initarg :port
+    :initform 443
+    :accessor client-port
+    :documentation "Port to connect to")
+   (hostname
+    :initarg :hostname
+    :initform (error "Must specify hostname")
+    :accessor client-hostname
+    :documentation "Hostname to connect to")
+   (api-prefix
+    :initarg :api-prefix
+    :initform ""
+    :accessor client-api-prefix
+    :documentation "API prefix"))
+  (:documentation "API client for interfacing with an OpenID Provider endpoint"))
+
+(defun make-client (&rest rest)
+  "Creates a new client for interfacing with the CSP APIs"
+  (apply #'make-instance 'client rest))
+
+(defmethod make-api-uri ((client client) path &key query-params)
+  "Creates an URI to the given API path"
+  (quri:make-uri :scheme (client-scheme client)
+                 :port (client-port client)
+                 :host (client-hostname client)
+                 :path (format nil "~a~a" (client-api-prefix client) path)
+                 :query query-params))
+
+(defmethod openid-provider-metadata ((client client))
+  "Returns the OpenID Provider Metadata"
+  (let* ((headers `(("Accept" . "application/json")
+                    ("User-Agent" . ,*user-agent*)
+                    ("Content-Type" . "application/json")))
+         (uri (make-api-uri client "/.well-known/openid-configuration"))
+         (resp (dexador:get uri :headers headers)))
+    (jonathan:parse resp :as :hash-table)))
