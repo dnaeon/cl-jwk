@@ -52,7 +52,7 @@
    :make-api-uri
    :openid-provider-metadata
    :public-keys
-   :parse-key
+   :decode
 
    ;; conditions
    :invalid-key
@@ -76,8 +76,8 @@
 (defgeneric public-keys (client)
   (:documentation "Returns the public keys used to verify the authenticity of tokens"))
 
-(defgeneric parse-key (kind data)
-  (:documentation "Parses a JWK key of the given kind using the provided data"))
+(defgeneric decode (kind data)
+  (:documentation "Decodes a JWK key of the given kind using the provided data"))
 
 (define-condition invalid-key (simple-error)
   ((message
@@ -175,7 +175,7 @@
          (resp (dexador:get uri :headers headers)))
     (jonathan:parse resp :as :plist)))
 
-(defmethod parse-key ((kind (eql :rsa)) data)
+(defmethod decode ((kind (eql :rsa)) data)
   "Parses RSA public key using the provided plist data.
 See RFC 7517 about the JWK format and RFC 7518, Section 6.3 about the
 RSA key parameters."
@@ -205,7 +205,7 @@ RSA key parameters."
             :kty kty
             :key key))))
 
-(defmethod parse-key ((kind (eql :secp256r1)) data)
+(defmethod decode ((kind (eql :secp256r1)) data)
   "Decodes Secp256r1 (NIST P-256) public key from the given plist data.
 See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
 public keys format."
