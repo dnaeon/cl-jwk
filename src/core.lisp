@@ -27,6 +27,11 @@
 (defpackage :cl-jwk.core
   (:use :cl)
   (:nicknames :cl-jwk.core)
+  (:import-from :alexandria)
+  (:import-from :babel)
+  (:import-from :ironclad)
+  (:import-from :jonathan)
+  (:import-from :dexador)
   (:export
    ;; vars
    :*user-agent*
@@ -175,18 +180,41 @@
          (resp (dexador:get uri :headers headers)))
     (jonathan:parse resp :as :plist)))
 
-(defmethod decode ((kind (eql :rsa)) data)
-  "Parses RSA public key using the provided plist data.
+(defmethod decode ((kind (eql :public-key)) data)
+  "Decodes a JWK public key by inferring the key from the given data and
+dispatches further decoding to the respective implementation"
+  (let* ((use (getf data :|use|))
+         (alg (getf data :|alg|))
+         (kid (getf data :|kid|))
+         (kty (getf data :|kty|))
+         (key-ops (getf data :|key_ops|))
+         (key (alexandria:switch (kty :test #'string=)
+                ("RSA" (decode :rsa-public-key data))
+                ("EC" (decode :ec-public-key data))
+                (t (error 'invalid-key :message "Unsupported public key type" :data data)))))
+    (make-instance 'jwk
+                   :kty kty
+                   :use use
+                   :kid kid
+                   :alg alg
+                   :key-ops key-ops
+                   :key key)))
+
+(defmethod decode ((kind (eql :ec-public-key)) data)
+  "Decodes an Elliptic Curve public key from the given data"
+  (let ((crv (getf data :|crv|)))
+    (alexandria:switch (crv :test #'string=)
+      ("P-256" (decode :secp256r1-public-key data))
+      ("P-384" (decode :secp384r1-public-key data))
+      ("P-521" (decode :secp521r1-public-key data))
+      (t (error 'invalid-key :message "Unsupported Elliptic Curve public key" :data data)))))
+
+(defmethod decode ((kind (eql :rsa-public-key)) data)
+  "Decodes RSA public key using the provided plist data.
 See RFC 7517 about the JWK format and RFC 7518, Section 6.3 about the
 RSA key parameters."
-  (let ((use (getf data :|use|))
-        (alg (getf data :|alg|))
-        (kid (getf data :|kid|))
-        (kty (getf data :|kty|))
-        (e (getf data :|e|))
+  (let ((e (getf data :|e|))
         (n (getf data :|n|)))
-    (unless (string= kty "RSA")
-      (error 'invalid-key :message "Invalid RSA public key" :data data))
     (unless n
       (error 'invalid-key :message "Missing modulus parameter" :data data))
     (unless e
@@ -197,27 +225,15 @@ RSA key parameters."
                         (babel:string-to-octets e))))
            (n-decoded (ironclad:octets-to-integer
                        (binascii:decode-base64url
-                        (babel:string-to-octets n))))
-           (key (ironclad:make-public-key :rsa :n n-decoded :e e-decoded)))
-      (list :use use
-            :alg (and alg (keywordize alg))
-            :kid kid
-            :kty kty
-            :key key))))
+                        (babel:string-to-octets n)))))
+      (ironclad:make-public-key :rsa :n n-decoded :e e-decoded))))
 
-(defmethod decode ((kind (eql :secp256r1)) data)
+(defmethod decode ((kind (eql :secp256r1-public-key)) data)
   "Decodes Secp256r1 (NIST P-256) public key from the given plist data.
 See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
 public keys format."
-  (let ((use (getf data :|use|))
-        (alg (getf data :|alg|))
-        (crv (getf data :|crv|))
-        (kid (getf data :|kid|))
-        (kty (getf data :|kty|))
-        (x (getf data :|x|))
+  (let ((x (getf data :|x|))
         (y (getf data :|y|)))
-    (unless (string= kty "EC")
-      (error 'invalid-key :message "Invalid Elliptic Curve public key" :data data))
     (unless x
       (error 'invalid-key :message "Missing X coordinate parameter" :data data))
     (unless y
@@ -231,9 +247,4 @@ public keys format."
       (unless (and (= (length x-octets) 32)
                    (= (length y-octets) 32))
         (error 'invalid-key "Invalid Secp256r1 key" :data data))
-      (list :use use
-            :crv crv
-            :alg (and alg (keywordize alg))
-            :kid kid
-            :kty kty
-            :key (ironclad:make-public-key :secp256r1 :y (ironclad::ec-encode-point point))))))
+      (ironclad:make-public-key :secp256r1 :y (ironclad::ec-encode-point point)))))

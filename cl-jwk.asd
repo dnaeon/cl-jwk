@@ -40,7 +40,8 @@
   :homepage "https://github.com/dnaeon/cl-jwk"
   :bug-tracker "https://github.com/dnaeon/cl-jwk"
   :source-control "https://github.com/dnaeon/cl-jwk"
-  :depends-on (:babel
+  :depends-on (:alexandria
+               :babel
                :binascii
                :cl-reexport
                :dexador
