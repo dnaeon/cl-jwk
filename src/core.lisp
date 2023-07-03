@@ -39,6 +39,15 @@
    :client-api-prefix
    :make-client
 
+   ;; jwk and accessors
+   :jwk
+   :jwk-kty
+   :jwk-use
+   :jwk-kid
+   :jwk-alg
+   :jwk-key-ops
+   :jwk-key
+
    ;; generics
    :make-api-uri
    :openid-provider-metadata
@@ -88,6 +97,39 @@
 (defun keywordize (name)
   "Returns a keyword from the given NAME"
   (intern (string name) :keyword))
+
+(defclass jwk ()
+  ((kty
+    :initarg :kty
+    :initform (error "Must specify key type")
+    :accessor jwk-kty
+    :documentation "Key Type parameter")
+    (use
+     :initarg :use
+     :initform nil
+     :accessor jwk-use
+     :documentation "Public Key Use parameter")
+    (kid
+     :initarg :kid
+     :initform nil
+     :accessor jwk-kid
+     :documentation "Key ID parameter")
+    (alg
+     :initarg :alg
+     :initform nil
+     :accessor jwk-alg
+     :documentation "Algorithm parameter")
+    (key-ops
+     :initarg :key-ops
+     :initform nil
+     :accessor jwk-key-ops
+     :documentation "Key Operations Parameter")
+    (key
+     :initarg :key
+     :initform (error "Must specify public key")
+     :accessor jwk-key
+     :documentation "The associated public key"))
+  (:documentation "JWK represents a JSON Web Key (JWK) public key as per RFC 7517"))
 
 (defclass client ()
   ((scheme
