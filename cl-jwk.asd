@@ -40,10 +40,12 @@
   :homepage "https://github.com/dnaeon/cl-jwk"
   :bug-tracker "https://github.com/dnaeon/cl-jwk"
   :source-control "https://github.com/dnaeon/cl-jwk"
-  :depends-on (:cl-reexport
+  :depends-on (:babel
+               :binascii
+               :cl-reexport
                :dexador
-               :jonathan
-               :ironclad)
+               :ironclad
+               :jonathan)
   :components ((:module "core"
                 :pathname #P"src/"
                 :components ((:file "core")))
