@@ -26,7 +26,7 @@
 (in-package :cl-user)
 (defpackage :cl-jwk.core
   (:use :cl)
-  (:nicknames :cl-jwk.core)
+  (:nicknames :jwk.core)
   (:import-from :alexandria)
   (:import-from :ironclad)
   (:import-from :jonathan)

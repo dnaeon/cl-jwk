@@ -28,7 +28,7 @@
   (:use :cl)
   (:import-from :cl-jwk.core)
   (:import-from :cl-reexport)
-  (:nicknames :cl-jwk))
+  (:nicknames :jwk))
 (in-package :cl-jwk)
 
 (cl-reexport:reexport-from :cl-jwk.core)
