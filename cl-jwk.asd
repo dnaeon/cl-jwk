@@ -30,7 +30,7 @@
 (defsystem "cl-jwk"
   :name "cl-jwk"
   :long-name "cl-jwk"
-  :description "Common Lisp system for parsing public JSON Web Keys (JWK)"
+  :description "Common Lisp system for decoding public JSON Web Keys (JWK)"
   :version "0.1.0"
   :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"

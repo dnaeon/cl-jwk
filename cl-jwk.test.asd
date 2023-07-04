@@ -30,7 +30,7 @@
 (defsystem "cl-jwk.test"
   :name "cl-jwk.test"
   :long-name "cl-jwk.test"
-  :description "Common Lisp system for parsing JSON Web Keys (JWK)"
+  :description "Test suite for cl-jwk system"
   :version "0.1.0"
   :author "Marin Atanasov Nikolov <dnaeon@gmail.com>"
   :maintainer "Marin Atanasov Nikolov <dnaeon@gmail.com>"
