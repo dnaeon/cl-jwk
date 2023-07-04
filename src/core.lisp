@@ -103,6 +103,14 @@
   "Returns a keyword from the given NAME"
   (intern (string name) :keyword))
 
+(defun base64url-encode-octets (octets)
+  "Base64Url encodes the given OCTETS sequence"
+  (string-right-trim (list #\=) (binascii:encode-base64url octets)))
+
+(defun base64url-encode-int (int)
+  "Base64Url encodes the given integer"
+  (base64url-encode-octets (ironclad:integer-to-octets int)))
+
 (defclass jwk ()
   ((kty
     :initarg :kty
