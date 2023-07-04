@@ -57,6 +57,7 @@
    :openid-provider-metadata
    :public-keys
    :decode
+   :verify-token
 
    ;; conditions
    :invalid-key
@@ -82,6 +83,9 @@
 
 (defgeneric decode (kind data)
   (:documentation "Decodes a JWK key of the given kind using the provided data"))
+
+(defgeneric verify-token (object token &optional algorithm)
+  (:documentation "Verifies and decodes the given JWT token"))
 
 (define-condition invalid-key (simple-error)
   ((message
@@ -134,6 +138,17 @@
      :reader jwk-key
      :documentation "The associated public key"))
   (:documentation "JWK represents a public JSON Web Key (JWK) as per RFC 7517"))
+
+(defmethod verify-token ((object jwk) token &optional algorithm)
+  "Verifies and decodes the given JWT token"
+  (multiple-value-bind (claims headers signature)
+      (jose:inspect-token token)
+    (declare (ignore claims signature))
+    ;; Get algorithm from the token, unless specified explicitely
+    (let* ((alg-from-header (cdr (assoc "alg" headers :test #'string=)))
+           (algorithm (or algorithm alg-from-header))
+           (key (jwk-key object)))
+      (jose:decode (keywordize algorithm) key token))))
 
 (defclass client ()
   ((scheme
@@ -191,6 +206,22 @@
     (mapcar (lambda (item)
               (decode :key item))
             (getf data :|keys|))))
+
+(defmethod verify-token ((object client) token &optional algorithm)
+  "Verifies and decodes the given JWT token"
+  (multiple-value-bind (claims headers signature)
+      (jose:inspect-token token)
+    (declare (ignore claims signature))
+    ;; Get algorithm from the token, unless specified explicitely.
+    ;; Also, find the public key which was used to sign the token.
+    (let* ((alg-from-header (cdr (assoc "alg" headers :test #'string=)))
+           (algorithm (or algorithm alg-from-header))
+           (kid (cdr (assoc "kid" headers :test #'string=)))
+           (keys (public-keys object))
+           (key (find kid keys :key #'jwk-kid :test #'string=)))
+      (unless key
+        (error "Unable to find public key with id: ~A" kid))
+      (jose:decode (keywordize algorithm) (jwk-key key) token))))
 
 (defmethod decode ((kind (eql :json)) json-string)
   "Decodes JWK public key from the given JSON string"
