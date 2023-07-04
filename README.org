@@ -36,18 +36,11 @@ published on Quicklisp.
 
 * Usage
 
-First, load the system.
-
-#+begin_src lisp
-  CL-USER> (ql:quickload :cl-jwk)
-#+end_src
-
 In order to decode a public JWK key from a JSON object, simply call
 the =CL-JWK:DECODE= generic function.
 
 For instance, in order to decode one of the test keys used by the
-=cl-jwk.test= system as part of the test suite, you can call
-=CL-JWK:DECODE= like this.
+=cl-jwk.test= system, you can call =CL-JWK:DECODE= like this.
 
 #+begin_src lisp
   CL-USER> (defparameter *json-data*
@@ -70,10 +63,10 @@ methods are available for a =CL-JWK:JWK= instance.
 - =CL-JWK:JWK-KEY-OPS=
 - =CL-JWK:JWK-KEY=
 
-The =CL-JWK:JWK-KEY= method will return the decoded public key as an
-instance of =ironclad='s public keys.
+The =CL-JWK:JWK-KEY= method returns an instance of an =ironclad=
+public key.
 
-You can also fetch public JWKs from an OpenID Provider.
+You can also fetch public JWKs from an OpenID Provider. For example:
 
 #+begin_src lisp
   CL-USER> (defparameter *client*
@@ -82,6 +75,37 @@ You can also fetch public JWKs from an OpenID Provider.
   CL-USER> (cl-jwk:public-keys *client*)
   (#<CL-JWK.CORE:JWK {10021B5FD3}> #<CL-JWK.CORE:JWK {10021B6053}>
    #<CL-JWK.CORE:JWK {10021B60D3}>)
+#+end_src
+
+Token verification can be done using [[https://github.com/fukamachi/jose][fukamachi/jose]] by providing the
+decoded JWK key and respective algorithm.
+
+The following helper function can be used to decode JWT tokens using
+the =cl-jwk= and =jose= systems.
+
+#+begin_src lisp
+  (defun decode-jwt (jwk token &optional algorithm)
+    "Decodes a token using JWK and JOSE systems"
+    (multiple-value-bind (claims headers signature)
+        (jose:inspect-token token)
+      (declare (ignore claims signature))
+      ;; Get algorithm from the token, unless specified explicitely
+      (let* ((alg-from-header (cdr (assoc "alg" headers :test #'string=)))
+             (algorithm (or algorithm alg-from-header))
+             (key (cl-jwk:jwk-key jwk)))
+        (jose:decode (cl-jwk:keywordize algorithm) key token))))
+#+end_src
+
+We can now use =DECODE-JWT= to decode a JWT token.
+
+#+begin_src lisp
+  CL-USER> (defparameter *jwk-key* (cl-jwk:decode :json *my-jwk-json-data*))
+  *JWK-KEY*
+
+  CL-USER> (defparameter *access-token* "eyJxxx.eyJzdWIiOiIxMjxxx.SflKxwRJSMeKKFxxx ...")
+  *ACCESS-TOKEN*
+
+  CL-USER> (decode-jwt *jwk-key* *access-token*)
 #+end_src
 
 * Tests
