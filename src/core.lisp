@@ -176,6 +176,10 @@
          (resp (dexador:get uri :headers headers)))
     (jonathan:parse resp :as :plist)))
 
+(defmethod decode ((kind (eql :json)) json-string)
+  "Decodes JWK public key from the given JSON string"
+  (decode :key (jonathan:parse json-string :as :plist)))
+
 (defmethod decode ((kind (eql :key)) data)
   "Decodes a JWK public key by inferring the key from the given plist
 data and dispatches further decoding to the respective implementation"
