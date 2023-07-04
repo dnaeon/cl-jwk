@@ -92,3 +92,20 @@
       (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
       (ok (equal :ES256K (cl-jwk:jwk-alg key)) "alg matches")
       (ok (typep (cl-jwk:jwk-key key) 'ironclad:secp256k1-public-key) "public key type matches"))))
+
+(deftest oct-keys
+  (testing "decode HMAC 3072 key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "hmac-3072.json"))))
+      (ok (string= "oct" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :HS256 (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:hmac) "key type matches")))
+
+  (testing "decode HMAC 4096 key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "hmac-4096.json"))))
+      (ok (string= "oct" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :HS512 (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:hmac) "key type matches"))))
