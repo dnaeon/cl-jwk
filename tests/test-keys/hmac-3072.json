@@ -1,0 +1,11 @@
+{
+    "keys": [
+        {
+            "kty": "oct",
+            "use": "sig",
+            "kid": "test-id",
+            "k": "elCXoCgCFG9ngWzBhs8eGmkJ649wQN-5kjf-xkxP-EDj348qmJKFOrnIUAy4ur-sHDxSz_FQFmltS0UHoINeqeqB3YdQ5thW8paH0si9mW9MCPjwdGK3ayWbhVC2CUTwgm8rwfYmv0SakvPRkTwSDSY24XCtl8OIm3Gl8pwJUI6geHqwETQ3euDSZNzYKWokVGD6MNIwj88hKj8iWWJvoZxS_0Q8q_h4H6EVQ1beBCed_-b8S4ClCHcuVBtU_B1t2U7pshwOo71RfPKv7SaqqCXjFIyAxv5VxlX3hJJDKdGWuoQBYBo61ij2mpylxT-FcFrF1ilcLnP9YQPCBwRqDb061t1FngWp9OHdQf7Rt1eHJDkOH7lYISy5FlBLWxYJgDX0Qh_8CtpVCiY-kXxeK5Ts-f6zGFanIMlmMcCC4F_afeDLPMPkND63TowqpPioRHXmAOx38p8GwA0_ppU9nLUehMttAxsIeBXyhC5D74nByIsPoMQwiAMyNZpi0Gtn",
+            "alg": "HS256"
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "kty": "EC",
+    "use": "sig",
+    "crv": "P-521",
+    "kid": "test-id",
+    "x": "AKWRmJ3thJwjqwoXgxgaWKWh_cAXZmqDzns-0jiiU6lvjRJ4r8ESSKoJhqrp_UuQLKGpm9jrlKBtPtLX80FrBIVZ",
+    "y": "AESwV4f-Q3X0TiW1ZRwWriPr67v2JVbD0Iu38fAYoWijCrsRSVorRNnQDawA0nbpAKPfPja45w4iIk4F4sZTUEta",
+    "alg": "ES512"
+}

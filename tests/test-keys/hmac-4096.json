@@ -1,0 +1,11 @@
+{
+    "keys": [
+        {
+            "kty": "oct",
+            "use": "sig",
+            "kid": "test-id",
+            "k": "v3bIg6mpzdkSEPLwKS4WVJ5VhluO1C-3Zrf1-SssGqYbUtlzHpVxFvoc7tOBHvulAU_BRPHVH6DidVIuqFkolC6fCOb8HXsUTeaonnUfOnfpqVGjG-1SWalcQ-54XcilSfmYVrdrZZf0JMY1gUSOR2CiNL4LApuFPXdBP_XWvKVwzvgjISRVK-wqiQR1kxFlHxbdSBREH-iUzpqVwnomvJGDzM-eKCSg79fqv_BR2mn4JmSK8eQ5acPus06SdgZsdJ2pFLbeHG6PBGkOG081DNCDBkgUxYWNA2iB6-EppYt-WtUErHEDVvtgdIb6H24GflSE3MgPDQGoBLz1vqt9KI2EULRnxS-RGuFheEXelmEcL0II3gvIE89p5j9ogQBZy4cpksgsDNUO96t3y7DINlIWZ16lKA0kSgwd-rOBv74xMf3f7d9qbX1sKaFNDbtHg5bt2pZ0OTnEZUrsRSyLE9P-Sp0zeAMza5fwskKf_9iC6auAH5Cra2E-Tr6lA2tyuqnZR3_urhaPGsLd4EWxSiR9QRMDHQgaZ50jEgFWL26PQ0U5zNxj7fK8tzixmVAfyDHt2ri23QXKzhJBIZNOgBPDtpMw5vw_XzWlmekfzQSeaB38bq6IqVUQ7oxMmQgh2BsYKO8yFJvFrm786R-E1cdR0x1xWulUhUHYKS2n6jc",
+            "alg": "HS512"
+        }
+    ]
+}
