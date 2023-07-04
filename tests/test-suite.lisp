@@ -59,3 +59,36 @@
       (ok (= 3072
              (integer-length (ironclad:rsa-key-modulus (cl-jwk:jwk-key key))))
           "key bits match"))))
+
+(deftest ec-keys
+  (testing "decode secp256r1 public key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "secp256r1-pub.json"))))
+      (ok (string= "EC" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :ES256 (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:secp256r1-public-key) "public key type matches")))
+
+  (testing "decode secp384r1 public key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "secp384r1-pub.json"))))
+      (ok (string= "EC" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :ES384 (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:secp384r1-public-key) "public key type matches")))
+
+  (testing "decode secp521r1 public key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "secp521r1-pub.json"))))
+      (ok (string= "EC" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :ES512 (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:secp521r1-public-key) "public key type matches")))
+
+  (testing "decode secp256k1 public key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "secp256k1-pub.json"))))
+      (ok (string= "EC" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :ES256K (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:secp256k1-public-key) "public key type matches"))))
