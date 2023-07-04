@@ -1,8 +1,16 @@
 * cl-jwk
 
-Common Lisp system for parsing JSON Web Keys (JWK)
+=cl-jwk= is a Common Lisp system for parsing public JSON Web Keys
+(JWK).
 
-** TODO Fill me in
+The following JWK keys are supported by the system.
+
+- =RSA=
+- =EC P-256=
+- =EC P-384=
+- =EC P-521=
+- =EC secp256k1=
+- =oct= (symmetric key)
 
 * Requirements
 
@@ -22,9 +30,59 @@ Then load the system.
 (ql:quickload :cl-jwk)
 #+end_src
 
+NOTE: =cl-jwk= uses features from latest =ironclad=, so make sure that
+you are using the latest =ironclad= release from Github, until it gets
+published on Quicklisp.
+
 * Usage
 
-** TODO Fill me in
+First, load the system.
+
+#+begin_src lisp
+  CL-USER> (ql:quickload :cl-jwk)
+#+end_src
+
+In order to decode a public JWK key from a JSON object, simply call
+the =CL-JWK:DECODE= generic function.
+
+For instance, in order to decode one of the test keys used by the
+=cl-jwk.test= system as part of the test suite, you can call
+=CL-JWK:DECODE= like this.
+
+#+begin_src lisp
+  CL-USER> (defparameter *json-data*
+             (uiop:read-file-string
+              (asdf:system-relative-pathname :cl-jwk.test "tests/test-keys/rsa-3072-pub.json")))
+  *JSON-DATA*
+  CL-USER> (cl-jwk:decode :json *json-data*)
+  #<CL-JWK.CORE:JWK {100510EB73}>
+#+end_src
+
+Upon successful decoding of the JSON data the =CL-JWK:DECODE= method
+will return a =CL-JWK:JWK= class instance. Use the available readers
+to get more details about the decoded public key. The following reader
+methods are available for a =CL-JWK:JWK= instance.
+
+- =CL-JWK:JWK-KTY=
+- =CL-JWK:JWK-USE=
+- =CL-JWK:JWK-KID=
+- =CL-JWK:JWK-ALG=
+- =CL-JWK:JWK-KEY-OPS=
+- =CL-JWK:JWK-KEY=
+
+The =CL-JWK:JWK-KEY= method will return the decoded public key as an
+instance of =ironclad='s public keys.
+
+You can also fetch public JWKs from an OpenID Provider.
+
+#+begin_src lisp
+  CL-USER> (defparameter *client*
+             (cl-jwk:make-client :hostname "accounts.google.com"))
+  *CLIENT*
+  CL-USER> (cl-jwk:public-keys *client*)
+  (#<CL-JWK.CORE:JWK {10021B5FD3}> #<CL-JWK.CORE:JWK {10021B6053}>
+   #<CL-JWK.CORE:JWK {10021B60D3}>)
+#+end_src
 
 * Tests
 
