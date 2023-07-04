@@ -28,7 +28,6 @@
   (:use :cl)
   (:nicknames :cl-jwk.core)
   (:import-from :alexandria)
-  (:import-from :babel)
   (:import-from :ironclad)
   (:import-from :jonathan)
   (:import-from :dexador)
@@ -44,7 +43,7 @@
    :client-api-prefix
    :make-client
 
-   ;; jwk and accessors
+   ;; jwk and readers
    :jwk
    :jwk-kty
    :jwk-use
@@ -62,10 +61,7 @@
    ;; conditions
    :invalid-key
    :invalid-key-message
-   :invalid-key-data
-
-   ;; misc
-   :keywordize))
+   :invalid-key-data))
 (in-package :cl-jwk.core)
 
 (defparameter *user-agent*
@@ -103,46 +99,38 @@
   "Returns a keyword from the given NAME"
   (intern (string name) :keyword))
 
-(defun base64url-encode-octets (octets)
-  "Base64Url encodes the given OCTETS sequence"
-  (string-right-trim (list #\=) (binascii:encode-base64url octets)))
-
-(defun base64url-encode-int (int)
-  "Base64Url encodes the given integer"
-  (base64url-encode-octets (ironclad:integer-to-octets int)))
-
 (defclass jwk ()
   ((kty
     :initarg :kty
     :initform (error "Must specify key type")
-    :accessor jwk-kty
+    :reader jwk-kty
     :documentation "Key Type parameter")
     (use
      :initarg :use
      :initform nil
-     :accessor jwk-use
+     :reader jwk-use
      :documentation "Public Key Use parameter")
     (kid
      :initarg :kid
      :initform nil
-     :accessor jwk-kid
+     :reader jwk-kid
      :documentation "Key ID parameter")
     (alg
      :initarg :alg
      :initform nil
-     :accessor jwk-alg
+     :reader jwk-alg
      :documentation "Algorithm parameter")
     (key-ops
      :initarg :key-ops
      :initform nil
-     :accessor jwk-key-ops
+     :reader jwk-key-ops
      :documentation "Key Operations Parameter")
     (key
      :initarg :key
      :initform (error "Must specify public key")
-     :accessor jwk-key
+     :reader jwk-key
      :documentation "The associated public key"))
-  (:documentation "JWK represents a JSON Web Key (JWK) public key as per RFC 7517"))
+  (:documentation "JWK represents a public JSON Web Key (JWK) as per RFC 7517"))
 
 (defclass client ()
   ((scheme
@@ -188,38 +176,38 @@
          (resp (dexador:get uri :headers headers)))
     (jonathan:parse resp :as :plist)))
 
-(defmethod decode ((kind (eql :public-key)) data)
-  "Decodes a JWK public key by inferring the key from the given data and
-dispatches further decoding to the respective implementation"
+(defmethod decode ((kind (eql :key)) data)
+  "Decodes a JWK public key by inferring the key from the given plist
+data and dispatches further decoding to the respective implementation"
   (let* ((use (getf data :|use|))
          (alg (getf data :|alg|))
          (kid (getf data :|kid|))
          (kty (getf data :|kty|))
          (key-ops (getf data :|key_ops|))
          (key (alexandria:switch (kty :test #'string=)
-                ("RSA" (decode :rsa-public-key data))
-                ("EC" (decode :ec-public-key data))
-                ("oct" (decode :oct-public-key data))
+                ("RSA" (decode :rsa data))
+                ("EC" (decode :ec data))
+                ("oct" (decode :oct data))
                 (t (error 'invalid-key :message "Unsupported public key type" :data data)))))
     (make-instance 'jwk
                    :kty kty
                    :use use
                    :kid kid
-                   :alg alg
+                   :alg (and alg (keywordize alg))
                    :key-ops key-ops
                    :key key)))
 
-(defmethod decode ((kind (eql :ec-public-key)) data)
+(defmethod decode ((kind (eql :ec)) data)
   "Decodes an Elliptic Curve public key from the given data"
   (let ((crv (getf data :|crv|)))
     (alexandria:switch (crv :test #'string=)
-      ("P-256" (decode :secp256r1-public-key data))
-      ("P-384" (decode :secp384r1-public-key data))
-      ("P-521" (decode :secp521r1-public-key data))
-      ("secp256k1" (decode :secp256k1-public-key data))
+      ("P-256" (decode :secp256r1 data))
+      ("P-384" (decode :secp384r1 data))
+      ("P-521" (decode :secp521r1 data))
+      ("secp256k1" (decode :secp256k1 data))
       (t (error 'invalid-key :message "Unsupported Elliptic Curve public key" :data data)))))
 
-(defmethod decode ((kind (eql :rsa-public-key)) data)
+(defmethod decode ((kind (eql :rsa)) data)
   "Decodes RSA public key using the provided plist data.
 See RFC 7517 about the JWK format and RFC 7518, Section 6.3 about the
 RSA key parameters."
@@ -231,14 +219,12 @@ RSA key parameters."
       (error 'invalid-key :message "Missing exponent parameter" :data data))
     ;; The RSA public key parameters are Base64urlUInt-encoded values
     (let* ((e-decoded (ironclad:octets-to-integer
-                       (binascii:decode-base64url
-                        (babel:string-to-octets e))))
+                       (binascii:decode-base64url e)))
            (n-decoded (ironclad:octets-to-integer
-                       (binascii:decode-base64url
-                        (babel:string-to-octets n)))))
+                       (binascii:decode-base64url n))))
       (ironclad:make-public-key :rsa :n n-decoded :e e-decoded))))
 
-(defmethod decode ((kind (eql :secp256r1-public-key)) data)
+(defmethod decode ((kind (eql :secp256r1)) data)
   "Decodes Secp256r1 (NIST P-256) public key from the given plist data.
 See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
 public keys format."
@@ -259,7 +245,7 @@ public keys format."
         (error 'invalid-key :message "Coordinates should be 32 bytes for Secp256r1 key" :data data))
       (ironclad:make-public-key :secp256r1 :y (ironclad:ec-encode-point point)))))
 
-(defmethod decode ((kind (eql :secp384r1-public-key)) data)
+(defmethod decode ((kind (eql :secp384r1)) data)
   "Decodes Secp384r1 (NIST P-384) public key from the given plist data.
 See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
 public keys format."
@@ -280,7 +266,7 @@ public keys format."
         (error 'invalid-key :message "Coordinates should be 48 bytes for Secp384r1 key" :data data))
       (ironclad:make-public-key :secp384r1 :y (ironclad:ec-encode-point point)))))
 
-(defmethod decode ((kind (eql :secp521r1-public-key)) data)
+(defmethod decode ((kind (eql :secp521r1)) data)
   "Decodes Secp521r1 (NIST P-521) public key from the given plist data.
 See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
 public keys format."
@@ -301,7 +287,7 @@ public keys format."
         (error 'invalid-key :message "Coordinates should be 66 bytes for Secp521r1 key" :data data))
       (ironclad:make-public-key :secp521r1 :y (ironclad:ec-encode-point point)))))
 
-(defmethod decode ((kind (eql :secp256k1-public-key)) data)
+(defmethod decode ((kind (eql :secp256k1)) data)
   "Decodes Secp256k1 public key from the given plist data.
 See RFC 7518, Section 6.2.1 for more details about Elliptic Curve
 public keys format."
@@ -329,7 +315,7 @@ public keys format."
     ("HS512" (ironclad:make-hmac key :sha512))
     (t (error 'invalid-key :message "Unsupported symmetric key algorithm" :data data))))
 
-(defmethod decode ((kind (eql :oct-public-key)) data)
+(defmethod decode ((kind (eql :oct)) data)
   "Decodes a JWK `octet-sequence' symmetric key from the given plist data.
 See RFC 7518, Section 6.4 for more details about Symmetric Keys format."
   (let ((k (getf data :|k|))
