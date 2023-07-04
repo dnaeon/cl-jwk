@@ -176,6 +176,19 @@
          (resp (dexador:get uri :headers headers)))
     (jonathan:parse resp :as :plist)))
 
+(defmethod public-keys ((client client))
+  "Returns the public keys used to verify the authenticity of tokens"
+  (let* ((headers `(("Accept" . "application/json")
+                    ("User-Agent" . ,*user-agent*)
+                    ("Content-Type" . "application/json")))
+         (metadata (openid-provider-metadata client))
+         (jwks-uri (getf metadata :|jwks_uri|))
+         (resp (dexador:get jwks-uri :headers headers))
+         (data (jonathan:parse resp :as :plist)))
+    (mapcar (lambda (item)
+              (decode :key item))
+            (getf data :|keys|))))
+
 (defmethod decode ((kind (eql :json)) json-string)
   "Decodes JWK public key from the given JSON string"
   (decode :key (jonathan:parse json-string :as :plist)))
