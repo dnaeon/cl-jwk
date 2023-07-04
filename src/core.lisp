@@ -61,7 +61,10 @@
    ;; conditions
    :invalid-key
    :invalid-key-message
-   :invalid-key-data))
+   :invalid-key-data
+
+   ;; misc
+   :keywordize))
 (in-package :cl-jwk.core)
 
 (defparameter *user-agent*
