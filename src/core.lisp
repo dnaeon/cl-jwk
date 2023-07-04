@@ -243,13 +243,13 @@ public keys format."
     ;; The X and Y coordinates are Base64urlUInt-encoded values
     (let* ((x-octets (binascii:decode-base64url x))
            (y-octets (binascii:decode-base64url y))
-           (x-uint (ironclad::ec-decode-scalar :secp256r1 x-octets))
-           (y-uint (ironclad::ec-decode-scalar :secp256r1 y-octets))
-           (point (make-instance 'ironclad::secp256r1-point :x x-uint :y y-uint :z 1)))
+           (x-uint (ironclad:ec-decode-scalar :secp256r1 x-octets))
+           (y-uint (ironclad:ec-decode-scalar :secp256r1 y-octets))
+           (point (make-instance 'ironclad:secp256r1-point :x x-uint :y y-uint :z 1)))
       (unless (and (= (length x-octets) 32)
                    (= (length y-octets) 32))
         (error 'invalid-key :message "Coordinates should be 32 bytes for Secp256r1 key" :data data))
-      (ironclad:make-public-key :secp256r1 :y (ironclad::ec-encode-point point)))))
+      (ironclad:make-public-key :secp256r1 :y (ironclad:ec-encode-point point)))))
 
 (defmethod decode ((kind (eql :secp384r1-public-key)) data)
   "Decodes Secp384r1 (NIST P-384) public key from the given plist data.
@@ -264,13 +264,13 @@ public keys format."
     ;; The X and Y coordinates are Base64urlUInt-encoded values
     (let* ((x-octets (binascii:decode-base64url x))
            (y-octets (binascii:decode-base64url y))
-           (x-uint (ironclad::ec-decode-scalar :secp384r1 x-octets))
-           (y-uint (ironclad::ec-decode-scalar :secp384r1 y-octets))
-           (point (make-instance 'ironclad::secp384r1-point :x x-uint :y y-uint :z 1)))
+           (x-uint (ironclad:ec-decode-scalar :secp384r1 x-octets))
+           (y-uint (ironclad:ec-decode-scalar :secp384r1 y-octets))
+           (point (make-instance 'ironclad:secp384r1-point :x x-uint :y y-uint :z 1)))
       (unless (and (= (length x-octets) 48)
                    (= (length y-octets) 48))
         (error 'invalid-key :message "Coordinates should be 48 bytes for Secp384r1 key" :data data))
-      (ironclad:make-public-key :secp384r1 :y (ironclad::ec-encode-point point)))))
+      (ironclad:make-public-key :secp384r1 :y (ironclad:ec-encode-point point)))))
 
 (defmethod decode ((kind (eql :secp521r1-public-key)) data)
   "Decodes Secp521r1 (NIST P-521) public key from the given plist data.
@@ -285,13 +285,13 @@ public keys format."
     ;; The X and Y coordinates are Base64urlUInt-encoded values
     (let* ((x-octets (binascii:decode-base64url x))
            (y-octets (binascii:decode-base64url y))
-           (x-uint (ironclad::ec-decode-scalar :secp521r1 x-octets))
-           (y-uint (ironclad::ec-decode-scalar :secp521r1 y-octets))
-           (point (make-instance 'ironclad::secp521r1-point :x x-uint :y y-uint :z 1)))
+           (x-uint (ironclad:ec-decode-scalar :secp521r1 x-octets))
+           (y-uint (ironclad:ec-decode-scalar :secp521r1 y-octets))
+           (point (make-instance 'ironclad:secp521r1-point :x x-uint :y y-uint :z 1)))
       (unless (and (= (length x-octets) 66)
                    (= (length y-octets) 66))
         (error 'invalid-key :message "Coordinates should be 66 bytes for Secp521r1 key" :data data))
-      (ironclad:make-public-key :secp521r1 :y (ironclad::ec-encode-point point)))))
+      (ironclad:make-public-key :secp521r1 :y (ironclad:ec-encode-point point)))))
 
 (defmethod decode ((kind (eql :secp256k1-public-key)) data)
   "Decodes Secp256k1 public key from the given plist data.
@@ -306,19 +306,19 @@ public keys format."
     ;; The X and Y coordinates are Base64urlUInt-encoded values
     (let* ((x-octets (binascii:decode-base64url x))
            (y-octets (binascii:decode-base64url y))
-           (x-uint (ironclad::ec-decode-scalar :secp256k1 x-octets))
-           (y-uint (ironclad::ec-decode-scalar :secp256k1 y-octets))
-           (point (make-instance 'ironclad::secp256k1-point :x x-uint :y y-uint :z 1)))
+           (x-uint (ironclad:ec-decode-scalar :secp256k1 x-octets))
+           (y-uint (ironclad:ec-decode-scalar :secp256k1 y-octets))
+           (point (make-instance 'ironclad:secp256k1-point :x x-uint :y y-uint :z 1)))
       (unless (and (= (length x-octets) 32)
                    (= (length y-octets) 32))
         (error 'invalid-key :message "Coordinates should be 32 bytes for Secp256k1 key" :data data))
-      (ironclad:make-public-key :secp256k1 :y (ironclad::ec-encode-point point)))))
+      (ironclad:make-public-key :secp256k1 :y (ironclad:ec-encode-point point)))))
 
 (defun %get-hmac (key alg data)
   (alexandria:switch (alg :test #'string=)
-    ("HS256" (ironclad:make-mac :hmac key :sha256))
-    ("HS384" (ironclad:make-mac :hmac key :sha384))
-    ("HS512" (ironclad:make-mac :hmac key :sha512))
+    ("HS256" (ironclad:make-hmac key :sha256))
+    ("HS384" (ironclad:make-hmac key :sha384))
+    ("HS512" (ironclad:make-hmac key :sha512))
     (t (error 'invalid-key :message "Unsupported symmetric key algorithm" :data data))))
 
 (defmethod decode ((kind (eql :oct-public-key)) data)
