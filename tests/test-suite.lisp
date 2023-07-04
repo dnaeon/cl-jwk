@@ -26,6 +26,36 @@
 (in-package :cl-user)
 (defpackage :cl-jwk.test
   (:use :cl :rove)
-  (:nicknames :cl-jwk.test)
+  (:import-from :cl-jwk)
+  (:nicknames :jwk.test)
   (:import-from :cl-jwk))
 (in-package :cl-jwk.test)
+
+(defun jwk-file-contents (file)
+  "Returns the contents of the given test JWK file"
+  (let* ((test-keys (asdf:system-relative-pathname :cl-jwk.test "tests/test-keys/"))
+         (jwk-path (merge-pathnames test-keys file)))
+    (uiop:read-file-string jwk-path)))
+
+(deftest rsa-keys
+  (testing "decode RSA 2048 public key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "rsa-2048-pub.json"))))
+      (ok (string= "RSA" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :RS256 (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:rsa-public-key) "public key type matches")
+      (ok (= 2048
+             (integer-length (ironclad:rsa-key-modulus (cl-jwk:jwk-key key))))
+          "key bits match")))
+
+  (testing "decode RSA 3072 public key"
+    (let ((key (cl-jwk:decode :json (jwk-file-contents "rsa-3072-pub.json"))))
+      (ok (string= "RSA" (cl-jwk:jwk-kty key)) "kty matches")
+      (ok (string= "sig" (cl-jwk:jwk-use key)) "use matches")
+      (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
+      (ok (equal :PS256 (cl-jwk:jwk-alg key)) "alg matches")
+      (ok (typep (cl-jwk:jwk-key key) 'ironclad:rsa-public-key) "public key type matches")
+      (ok (= 3072
+             (integer-length (ironclad:rsa-key-modulus (cl-jwk:jwk-key key))))
+          "key bits match"))))
