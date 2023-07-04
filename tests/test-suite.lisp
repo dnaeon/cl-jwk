@@ -109,3 +109,20 @@
       (ok (string= "test-id" (cl-jwk:jwk-kid key)) "kid matches")
       (ok (equal :HS512 (cl-jwk:jwk-alg key)) "alg matches")
       (ok (typep (cl-jwk:jwk-key key) 'ironclad:hmac) "key type matches"))))
+
+(deftest openid-provider
+  (testing "get openid-provider metadata"
+    (let* ((client (cl-jwk:make-client :hostname "accounts.google.com"))
+           (metadata (cl-jwk:openid-provider-metadata client)))
+      (ok (string= "https://accounts.google.com" (getf metadata :|issuer|))
+          "issuer matches")
+      (ok (getf metadata :|token_endpoint|) "token_endpoint is present")
+      (ok (getf metadata :|jwks_uri|) "jwks_uri is present")
+      (ok (getf metadata :|userinfo_endpoint|) "userinfo_endpoint is present")
+      (ok (getf metadata :|revocation_endpoint|) "revocation_endpoint is present")
+      (ok (getf metadata :|id_token_signing_alg_values_supported|) "id_token_signing_alg_values_supported is present")))
+
+  (testing "fetch JWK keys from jwks_uri"
+    (let* ((client (cl-jwk:make-client :hostname "accounts.google.com"))
+           (keys (cl-jwk:public-keys client)))
+      (ok (> (length keys) 0) "public keys is greater than zero"))))
