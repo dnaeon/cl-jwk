@@ -45,7 +45,8 @@
                :cl-reexport
                :dexador
                :ironclad
-               :jonathan)
+               :jonathan
+               :jose)
   :components ((:module "core"
                 :pathname #P"src/"
                 :components ((:file "core")))
