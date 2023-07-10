@@ -14,7 +14,7 @@ case "${LISP}" in
         ;;
 esac
 
-${LISP} "${_no_debug_flag}" \
+${LISP} ${_no_debug_flag} \
         --eval '(ql:quickload :cl-jwk.test)' \
         --eval '(setf rove:*enable-colors* nil)' \
         --eval '(asdf:test-system :cl-jwk.test)' \
